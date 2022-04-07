@@ -7,7 +7,7 @@ const signature = require('./verifySignature');
 const app = express();
 const apiUrl = 'https://slack.com/api';
 
-const slackapi = require('simple-slack-api')
+const slackapi = require('./slack.js')
 const slack = new slackapi(process.env.SLACK_ACCESS_TOKEN, process.env.SLACK_SIGNING_SECRET, process.env.SLACK_VERIFICATION_TOKEN)
 
 const rawBodyBuffer = (req, res, buf, encoding) => {
@@ -102,15 +102,13 @@ app.post('/getrrmatches', (req, res) => {
     let boards = []
     for (var a in data) {
       if (data[a]["rr_tournament"] == true) {
-        boards[a] = {}
-        boards[a]["label"] = data[a]["board_name"]
-        boards[a]["value"] = data[a]["board_name"]
+        boards[a] = {label: data[a]["board_name"], value: data[a]["board_name"]}
       }
     }
     if (boards === []) {
       slack.sendEphemeral("There are currently no tournaments. Ask an admin to add one on the web application.", req.body.channel_id, req.body.user_id)
     } else {
-      openMatchesDialog(req.body, boards);
+      openMatchesDialog(req.body, boards.filter((a) => a));
     }
   })
 })
@@ -266,8 +264,11 @@ const openDialog = (payload, data) => {
     })
   };
 
-  const promise = axios.post(`${apiUrl}/dialog.open`, qs.stringify(dialogData));
-  return promise;
+  const promise = axios.post(`${apiUrl}/dialog.open`, qs.stringify(dialogData), { headers: { authorization: `Bearer ${process.env.SLACK_ACCESS_TOKEN}` } })
+  .then(function(x) {
+    return(x)
+  });
+  return(promise)
 };
 
 const openMatchesDialog = (payload, data) => {
@@ -297,8 +298,11 @@ const openMatchesDialog = (payload, data) => {
     })
   };
 
-  const promise = axios.post(`${apiUrl}/dialog.open`, qs.stringify(dialogData));
-  return promise;
+  const promise = axios.post(`${apiUrl}/dialog.open`, qs.stringify(dialogData), { headers: { authorization: `Bearer ${process.env.SLACK_ACCESS_TOKEN}` } })
+  .then(function(x) {
+    return(x)
+  });
+  return(promise)
 };
 
 const server = app.listen(process.env.PORT || 5000, () => {
